@@ -1,0 +1,1 @@
+Aplicativo criado em python para controle de estoque, ainda precisa de ajustes, foi criado o CSS junto ao HTML porque não consegui ajustar para importar o CSS de outra pasta, ainda precisa ser melhorada a interface com o usuário para mostrar as imagens de cada produto e também adicionar um código de barra para cada item.
