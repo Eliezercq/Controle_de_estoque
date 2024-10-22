@@ -8,10 +8,10 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 CORS(app)
 
-# Define o caminho para o banco de dados
+# banco de dados
 DB_PATH = './produtos.db'
 
-# Cria a tabela 'produtos' no banco de dados, caso não exista
+# Cria a tabela, caso não exista
 def create_table():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -29,12 +29,12 @@ def create_table():
 
 create_table()
 
-# Rota para a página inicial (index.html)
+# página inicial (index.html)
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-# Rota para buscar todos os produtos cadastrados
+# buscar todos os produtos cadastrados
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     conn = sqlite3.connect(DB_PATH)
@@ -55,7 +55,7 @@ def get_produtos():
     else:
         return jsonify(produtos)
 
-# Rota para adicionar um novo produto
+# adicionar um novo produto
 @app.route('/api/add-produtos', methods=['POST'])
 def add_produtos():
     nome = request.form['nome']
@@ -88,7 +88,7 @@ def add_produtos():
     else:
         return jsonify({'status': 'erro', 'mensagem': 'Ocorreu um erro ao cadastrar!'})
 
-# Rota para atualizar um produto existente
+# atualizar um produto existente
 @app.route('/api/update-produtos/<int:id>', methods=['PUT'])
 def update_produtos(id):
     nome = request.form['nome']
@@ -123,7 +123,7 @@ def update_produtos(id):
     else:
         return jsonify({'status': 'erro', 'mensagem': 'Ocorreu um erro ao atualizar o produto!'})
 
-# Rota para deletar um produto pelo ID
+# deletar um produto pelo ID
 @app.route('/api/delete-produtos/<int:id>', methods=['DELETE'])
 def delete_produtos(id):
     conn = sqlite3.connect(DB_PATH)
@@ -138,7 +138,7 @@ def delete_produtos(id):
     else:
         return jsonify({'status': 'erro', 'mensagem': 'Ocorreu um erro ao deletar o produto'})
 
-# Rota para buscar os detalhes de um produto pelo ID
+# buscar os detalhes de um produto pelo ID
 @app.route('/api/detalhe-produto/<int:id>', methods=['GET'])
 def get_produto_by_id(id):
     conn = sqlite3.connect(DB_PATH)
@@ -161,7 +161,7 @@ def get_produto_by_id(id):
     else:
         return None
 
-# Rota para enviar imagens
+# enviar imagens
 @app.route('/imagens/<path:path>')
 def send_image(path):
     return send_from_directory(os.path.join(app.root_path, 'imagens'), path)
