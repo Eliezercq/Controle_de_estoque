@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque_Garimpus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jdelivr.net/gh/devicons/devicon@v2.14.0/devicon.min.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet">
+     
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body class="body">
+    <h1 class="produtos">Garimpus</h1>
+    
+    <!-- Campo de busca -->
+    <h2 class="buscarproduto">Buscar Produto</h2>
+    <div class="buscarproduto">
+        <input type="text" id="search" placeholder="Digite o nome do produto" onkeyup="buscarProduto()">
+    </div>
+    
+    <div id="mensagem"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Preço</th>
+                <th>Data de Cadastro</th>
+                <th>Data do Produto</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="produtos-list"></tbody>
+    </table>
+
+    <hr>
+
+    <div class="adproduto">
+    <h2>Adicionar Produto</h2>
+    </div>
+
+    <div class="form">
+        <form id="produtoForm" enctype="multipart/form-data">
+        <label>Nome:</label>
+        <input type="text" id="nome" name="nome" required>
+        <br>
+        <label>Descrição:</label>
+        <input type="text" id="descricao" name="descricao">
+        <br>
+        <label>Preço:</label>
+        <input type="number" step="0.01" id="preco" name="preco" required>
+        <br>
+        <label>Data do Produto:</label>
+        <input type="date" id="data_validade" name="data_validade">
+        <br>
+        <label>Imagem:</label>
+        <input type="file" id="imagem" name="imagem">
+        <br>
+        <button type="submit" id="add-produto">Adicionar Produto</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function exibirProdutos(produtos) {
+            var html = '';
+            if (produtos.status == 'erro') {
+                $('#mensagem').html('<h1>' + produtos.mensagem + '</h1>');
+            } else {
+                for (var i = 0; i < produtos.length; i++) {
+                    html += '<tr>';
+                    html += '<td>' + produtos[i].id + '</td>';
+                    html += '<td>' + produtos[i].nome + '</td>';
+                    html += '<td>' + produtos[i].descricao + '</td>';
+                    html += '<td>' + produtos[i].preco + '</td>';
+                    html += '<td>' + produtos[i].data_cadastro + '</td>';
+                    html += '<td>' + produtos[i].data_validade + '</td>';
+                    html += '<td>';
+                    html += '<button class="edit" data-id="' + produtos[i].id + '">Editar</button>';
+                    html += '<button class="delete" data-id="' + produtos[i].id + '">Deletar</button>';
+                    html += '</td>';
+                    html += '</tr>';
+                }
+                $('#produtos-list').html(html);
+            }
+        }
+
+        function buscarProduto() {
+            var termoBusca = $('#search').val().toLowerCase();
+
+            // Filtra os produtos na tabela
+            $('#produtos-list tr').filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(termoBusca) > -1);
+            });
+        }
+
+        function carregarProdutos() {
+            $.ajax({
+                url: '/api/produtos',
+                method: 'GET',
+                success: function(response) {
+                    exibirProdutos(response);
+                }
+            });
+        }
+
+        $('#add-produto').click(function(e) {
+            e.preventDefault();
+
+            var formData = new FormData($('#produtoForm')[0]);
+
+            $.ajax({
+                url: 'api/add-produtos',
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function(response) {
+                    alert(response.mensagem);
+                    carregarProdutos();
+                }
+            });
+        });
+
+        $(document).on('click', '.delete', function() {
+            var id = $(this).data('id');
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                $.ajax({
+                    url: '/api/delete-produtos/' + id,
+                    method: 'DELETE',
+                    success: function(response) {
+                        alert(response.mensagem);
+                        carregarProdutos();
+                    }
+                });
+            }
+        });
+
+        $(document).on('click', '.edit', function() {
+            var id = $(this).data('id');
+            
+            $.ajax({
+                url: '/api/detalhe-produto/' + id,
+                method: 'GET',
+                success: function(produto) {
+                    $('#nome').val(produto.nome);
+                    $('#descricao').val(produto.descricao);
+                    $('#preco').val(produto.preco);
+                    $('#data_validade').val(produto.data_validade);
+                    $('#add-produto').text('Atualizar Produto').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        atualizarProduto(id);
+                    });
+                }
+            });
+        });
+
+        function atualizarProduto(id) {
+            var formData = new FormData($('#produtoForm')[0]);
+
+            $.ajax({
+                url: '/api/update-produtos/' + id,
+                method: 'PUT',
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function(response) {
+                    alert(response.mensagem);
+                    carregarProdutos();
+                }
+            });
+        }
+
+        $(function() {
+            carregarProdutos();
+        });
+    </script>
+</body>
+</html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque_Garimpus</title>
+    <style>
+    body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #7070d4;
+    margin: 0;
+    padding: 20px;
+    }
+
+    /* Título principal */
+    h1.produtos {
+    text-align: center;
+    font-size: 36px;
+    color: #4a4a4a;
+    margin-bottom: 20px;
+    }
+
+    /* Estilo do campo de busca */
+    .buscarproduto {
+    text-align: center;
+    margin-bottom: 20px;
+    }
+
+    .buscarproduto input {
+    padding: 10px;
+    width: 300px;
+    border: 2px solid #de1e1e;
+    border-radius: 5px;
+    font-size: 16px;
+    }
+
+    /* Tabela de produtos */
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    }
+
+    table th, table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    }
+
+    table th {
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: 600;
+    }
+
+    table td img {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: contain;
+    }
+
+    /* Estilizando os botões de ação */
+    button.edit, button.delete {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    margin-right: 5px;
+    }
+
+    button.edit {
+    background-color: #4CAF50; /* Verde */
+    }
+
+    button.delete {
+    background-color: #f44336; /* Vermelho */
+    }
+
+    /* Estilizando o formulário de adicionar produto */
+    .form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+    }
+
+    .form label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    }
+
+    .form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    }
+
+    button#add-produto {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    }
+
+    button#add-produto:hover {
+    background-color: #0056b3;
+    }
