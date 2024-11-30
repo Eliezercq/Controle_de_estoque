@@ -45,12 +45,10 @@ def gerar_codigo_barras(produto_id, nome,codigo, descricao):
     barcode.save(barcode_path)
     return barcode_filename
 
-# Página inicial (index.html)
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-# Busca produtos cadastraados
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     conn = sqlite3.connect(DB_PATH)
@@ -68,7 +66,6 @@ def get_produtos():
     conn.close()
     return jsonify(produtos)
 
-# Adicionar produto e gerar código de barra
 @app.route('/api/add-produtos', methods=['POST'])
 def add_produtos():
     nome = request.form['nome']
